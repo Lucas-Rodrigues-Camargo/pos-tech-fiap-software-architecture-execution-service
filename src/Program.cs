@@ -6,11 +6,11 @@ using Amazon.SQS;
 using Amazon.DynamoDBv2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Npgsql;
 using Platform;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration["Service:Name"] = "execution";
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole(o => o.IncludeScopes = true);
 builder.Logging.AddFilter("Microsoft.AspNetCore", LogLevel.Warning);
@@ -90,6 +90,10 @@ app.MapGet("/api/jobs", async (Guid? after, IAmazonDynamoDB db, IConfiguration c
 }).RequireAuthorization("Employee");
 app.MapPost("/api/jobs/{id:guid}/finish", async (Guid id, HttpContext context, Processor processor, CancellationToken ct) => {
     var state = await processor.Handle(Access.Command(context, id, "FinishRepair", new()), ct);
+    return Results.Ok(new { state.Id, state.Status });
+}).RequireAuthorization("Employee");
+app.MapPost("/api/jobs/{id:guid}/start", async (Guid id, HttpContext context, Processor processor, CancellationToken ct) => {
+    var state = await processor.Handle(Access.Command(context, id, "StartRepair", new()), ct);
     return Results.Ok(new { state.Id, state.Status });
 }).RequireAuthorization("Employee");
 
