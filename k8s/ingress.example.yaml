@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: oficina-execution
+  annotations:
+    nginx.ingress.kubernetes.io/limit-rps: "20"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [HOST_PLACEHOLDER]
+      secretName: TLS_SECRET_PLACEHOLDER
+  rules:
+    - host: HOST_PLACEHOLDER
+      http:
+        paths:
+          - path: /api/jobs
+            pathType: Prefix
+            backend:
+              service:
+                name: oficina-execution
+                port: { number: 80 }
